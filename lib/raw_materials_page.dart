@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
@@ -28,13 +29,28 @@ class _RawMaterialScreen extends State<RawMaterialScreen> {
     final responseContainers = await http.get('$url/rate/model/list/$id');
     //print(responseTask.statusCode);
     if (responseContainers.statusCode == 200) {
-      var containersMaps = jsonDecode(responseContainers.body);
+      var containersMaps =
+          jsonDecode(utf8.decode(responseContainers.bodyBytes));
       var containersList = List<RawMaterial>();
       for (var containersMap in containersMaps) {
         containersList.add(RawMaterial.fromJson(containersMap));
       }
       return containersList;
     }
+  }
+
+  Image imageFromBase64StringWH(
+      String base64String, double width, double height) {
+    return Image.memory(base64Decode(base64String),
+        width: width, height: height, fit: BoxFit.cover);
+  }
+
+  Uint8List dataFromBase64String(String base64String) {
+    return base64Decode(base64String);
+  }
+
+  String base64String(Uint8List data) {
+    return base64Encode(data);
   }
 
   @override
@@ -64,10 +80,15 @@ class _RawMaterialScreen extends State<RawMaterialScreen> {
       ),
       child: Column(
         children: <Widget>[
-          Container(
-            color: Colors.white,
-          ),
-          SizedBox(height: 8.0),
+          products[index].image != null
+              ? imageFromBase64StringWH(
+                  products[index].image.contains('jpeg')
+                      ? products[index].image.substring(23)
+                      : products[index].image.substring(22),
+                  90,
+                  90,
+                )
+              : SizedBox(height: 8.0),
           Text(
             products[index].name != null ? products[index].name : 'i',
             style: TextStyle(
@@ -379,8 +400,25 @@ class _CartScreenState extends State<CartScreen> {
       var responseCart = await http.post("$url/order_material",
           headers: {"Content-Type": "application/json"},
           body: utf8.encode(json.encode(dataCart)));
-
-      Navigator.pushNamed(context, '/mainCatalogContainer');
+      showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: Text("Успешно!"),
+              content: Text("Заказ был оформлен!"),
+              actions: <Widget>[
+                FlatButton(
+                  child: Text("Ок"),
+                  onPressed: () {
+                    Navigator.of(context).pushAndRemoveUntil(
+                        MaterialPageRoute(
+                            builder: (BuildContext context) => MenuPage()),
+                        (Route<dynamic> route) => false);
+                  },
+                )
+              ],
+            );
+          });
     }
   }
 }

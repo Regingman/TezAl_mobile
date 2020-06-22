@@ -4,13 +4,16 @@ class Containers {
   int budgetId;
   int containerCategoryId;
   int number;
+  String image;
 
-  Containers.fromJson(Map<String, dynamic> json)
-      : id = json['id'],
-        name = json['name'],
-        budgetId = json['budgetId'],
-        containerCategoryId = json['containerCategoryId'],
-        number = json['number'];
+  Containers.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    name = json['name'];
+    budgetId = json['budgetId'];
+    containerCategoryId = json['containerCategoryId'];
+    number = json['number'];
+    image = json['image'];
+  }
 
   Map<String, dynamic> toJson() => {
         'id': id,

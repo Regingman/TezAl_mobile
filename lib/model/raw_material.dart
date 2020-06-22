@@ -1,7 +1,3 @@
-import 'dart:ffi';
-
-import 'package:flutter/cupertino.dart';
-
 class RawMaterial {
   int id;
   String name;
@@ -13,16 +9,19 @@ class RawMaterial {
   int rawMaterialId;
   int count = 1;
   double summ = 0;
+  String image;
 
-  // Image image = "";
+  RawMaterial.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    name = json['rawMaterialName'];
+    category = json['rawMaterialCategory'];
+    retailPrice = json['retailPrice'];
+    quantityInStock = json['quantityInStock'];
+    rawMaterialId = json['rawMaterialId'];
+    image = json['rawMaterialImage'];
 
-  RawMaterial.fromJson(Map<String, dynamic> json)
-      : id = json['id'],
-        name = json['rawMaterialName'],
-        category = json['rawMaterialCategory'],
-        retailPrice = json['retailPrice'],
-        quantityInStock = json['quantityInStock'],
-        rawMaterialId = json['rawMaterialId'];
+    //print(image);
+  }
 
   Map<String, dynamic> toJson() => {
         'id': id,

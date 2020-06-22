@@ -3,9 +3,11 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tezal/menu_page.dart';
 import 'package:tezal/raw_materials_page.dart';
+import 'data/moor_filename.dart';
 import 'main.dart';
 import 'model/containers.dart';
 
@@ -45,6 +47,8 @@ class _ContainerScreen extends State<ContainerScreen> {
   List<Containers> container = List<Containers>();
   List<Containers> _containersForDisplay = List<Containers>();
 
+  List<Task> taskMain = new List<Task>();
+
   Future<List<Containers>> fetchNotes() async {
     String url = TezAL.getUrl;
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
@@ -56,7 +60,8 @@ class _ContainerScreen extends State<ContainerScreen> {
     //print(responseTask.statusCode);
     if (responseContainers.statusCode == 200) {
       //print(responseTask.body);
-      var containersMaps = jsonDecode(responseContainers.body);
+      var containersMaps =
+          jsonDecode(utf8.decode(responseContainers.bodyBytes));
       var containersList = List<Containers>();
       for (var containersMap in containersMaps) {
         containersList.add(Containers.fromJson(containersMap));
@@ -73,6 +78,8 @@ class _ContainerScreen extends State<ContainerScreen> {
         _containersForDisplay = container;
       });
     });
+    /**/
+
     super.initState();
   }
 
@@ -87,7 +94,10 @@ class _ContainerScreen extends State<ContainerScreen> {
     ));
   }
 
+  bool flajok = true;
+
   _searchBar() {
+    if (flajok) _buildTaskList();
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: TextField(
@@ -149,9 +159,14 @@ class _ContainerScreen extends State<ContainerScreen> {
           trailing: IconButton(
             icon: Icon(
               Icons.star,
-              color: Colors.black,
+              color: flag(_containersForDisplay[index].id)
+                  ? Colors.black
+                  : Colors.white,
             ),
-            onPressed: () {},
+            onPressed: () {
+              _buildTextField(_containersForDisplay[index].id,
+                  _containersForDisplay[index].name);
+            },
           ),
           onTap: () {
             _container(_containersForDisplay[index].id);
@@ -165,6 +180,94 @@ class _ContainerScreen extends State<ContainerScreen> {
         ),
       ),
     );
+  }
+
+  bool flag(int id) {
+    if (taskMain == null) return false;
+    for (int i = 0; i < taskMain.length; i++) {
+      if (id == taskMain[i].containerId) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  Expanded _buildTextField(int cont, String name) {
+    final database = Provider.of<TezAlDb>(context);
+
+    bool flag = false;
+    if (taskMain != null)
+      for (int i = 0; i < taskMain.length; i++) {
+        if (taskMain[i].containerId == cont) {
+          flag = true;
+        }
+      }
+    if (flag == false) {
+      final task = Task(
+        containerId: cont,
+        name: name,
+      );
+      database.insertTask(task);
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text("Оповещение"),
+            content: Text("Контейнер был успешно добавлен в список избранных"),
+            actions: <Widget>[
+              FlatButton(
+                child: Text("Закрыть"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.push(
+                      context,
+                      new MaterialPageRoute(
+                          builder: (BuildContext context) =>
+                              new ContainersPage()));
+                  ;
+                },
+              ),
+            ],
+          );
+        },
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text("Оповещение"),
+            content: Text("Контейнер уже есть в списке избранных"),
+            actions: <Widget>[
+              FlatButton(
+                child: Text("Закрыть"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.push(
+                      context,
+                      new MaterialPageRoute(
+                          builder: (BuildContext context) =>
+                              new ContainersPage()));
+                  ;
+                },
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+
+  Future<List<Task>> _buildTaskList() {
+    final database = Provider.of<TezAlDb>(context);
+    Future<List<Task>> taskTemp = database.getAllTasks();
+    taskTemp.then((value) {
+      setState(() {
+        flajok = false;
+        taskMain.addAll(value);
+        print(taskMain);
+      });
+    });
   }
 
   _container(int id) async {
