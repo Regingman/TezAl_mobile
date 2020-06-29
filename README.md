@@ -1,7 +1,7 @@
 # tezal
-
-A new Flutter project.
-
+Flutter project.
+## Приложения для закупки товаров.
+![alt text](Screenshot_2020-06-29-13-32-35-121_com.example.tezal.png)
 ## Getting Started
 
 This project is a starting point for a Flutter application.
